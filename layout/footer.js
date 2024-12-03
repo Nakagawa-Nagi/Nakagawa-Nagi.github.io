@@ -32,7 +32,7 @@ document.writeln("            <ul class=\'foot-ul\'>");
 document.writeln("              <li><i class=\'fa-brands fa-html5\'></i> <a target=\'_blank\' href=\'../../../../../../gp-backup/\'>设计模板 Template</a></li>");
 document.writeln("              <li><i class=\'fa-regular fa-comments\'></i> <a target=\'_blank\' href=\'http://ics.flarum.cloud\'>论坛 ICS Forum</a></li>");
 document.writeln("              <li><i class=\'bi bi-link-45deg\'></i> <a target=\'_blank\' href=\'links\'>使用链接 Links</a></li>");
-document.writeln("              <li><i class=\'bi bi-people-fill\'></i> <a target=\'_blank\' href=\'#\' title=\'强大的原生软件开发团队\'>InnerSon-Development</a></li>");
+document.writeln("              <li><i class=\'bi bi-people-fill\'></i> <a target=\'_blank\' href=\'//waston101.github.io\' title=\'强大的原生软件开发团队\'>InnerSon-Development</a></li>");
 document.writeln("              <h5>More links are preparing...</h5>");
 document.writeln("            </ul>");
 document.writeln("          </div>");
@@ -45,7 +45,7 @@ document.writeln("        &copy; Copyright 2021-2023<strong><span> ICS I.N.</spa
 document.writeln("      </div>");
 document.writeln("      <div class=\'credits\'>");
 document.writeln("        Designed by <span>Nakagawa - CHinaTsu</span>");
-document.writeln("        <i class=\'fa-brands fa-font-awesome\'></i><a class=\'user-select-none\'> </a><i class=\'bi bi-bootstrap\'></i><a class=\'user-select-none\'> </a><i class=\'fa-brands fa-html5\'></i><a class=\'user-select-none\'> </a><i class=\'fa-brands fa-edge\'></i><script type=\'text/javascript\'' src=\'//js.users.51.la/21697767.js\'></script>");
+document.writeln("        <i class=\'fa-brands fa-font-awesome\'></i><a class=\'user-select-none\'> </a><i class=\'bi bi-bootstrap\'></i><a class=\'user-select-none\'> </a><i class=\'fa-brands fa-html5\'></i><a class=\'user-select-none\'> </a><i class=\'fa-brands fa-edge\'></i><script type=\'text/javascript\' src=\'//js.users.51.la/21697767.js\'></script>");
 document.writeln("      </div>");
-document.writeln("    </div>"); 
+document.writeln("    </div>");
 document.writeln("  </footer>");
