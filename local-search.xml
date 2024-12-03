@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>修复引导</title>
+    <link href="/RepaireBoot/"/>
+    <url>/RepaireBoot/</url>
+    
+    <content type="html"><![CDATA[<p>关于BIOS中可以识别硬盘，但无法从硬盘引导的问题的解决方案</p><span id="more"></span><h3 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h3><p>折腾电脑时发现自动进入bios界面了，仔细一看发现无法选择从硬盘引导。这时候我们通过微星BIOS中的<em>Board explorer</em>发现：M.2 固态已经正确连接在主板的M.2接口上了，说明主板是可以正确读到硬盘的。可是，回到<em>Boot</em>界面却找不到我们的系统盘了。</p><h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>BIOS可以识别硬盘，但是无法从系统盘启动（无此盘选项）</p><h3 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h3><h4 id="大致思路"><a href="#大致思路" class="headerlink" title="大致思路"></a>大致思路</h4><p>遇到这种这种情况大概率是因为EFI引导分区被误删除了，BIOS认不到装着系统的硬盘就是系统盘了。既然是EFI分区出了问题，那么我们只需要把EFI分区及其中的文件修复就好了。那么首先，通过PE系统，如果你的PE系统自带DiskGenius及类似的工具，可以通过他们来更加方便地查看。没有EFI分区就要创建，再在EFI分区中使用bootbcd修复修好啦</p><p>下面，开始实操！</p><h4 id="解决方法-1"><a href="#解决方法-1" class="headerlink" title="解决方法"></a>解决方法</h4><h5 id="1-通过UEFI启动至PE系统"><a href="#1-通过UEFI启动至PE系统" class="headerlink" title="1.通过UEFI启动至PE系统"></a>1.通过UEFI启动至PE系统</h5><h6 id="PE系统U盘的制作"><a href="#PE系统U盘的制作" class="headerlink" title="PE系统U盘的制作"></a>PE系统U盘的制作</h6><p><em>这里推荐使用<a href="https://www.wepe.com.cn/">微PE工具箱</a>制作</em></p><div class="note note-info">            <p>如果在PE U盘制作过程中发现微PE无法识别到U盘，可以试试在工具箱右下角选择CD图标，导出iso文件再使用<a href="https://rufus.ie/zh/"><u>Rufus</u></a>创建 USB 启动盘</p>          </div><h6 id="使用Rufus创建PE盘："><a href="#使用Rufus创建PE盘：" class="headerlink" title="使用Rufus创建PE盘："></a>使用Rufus创建PE盘：</h6><ol><li>点击<strong>生成可启动 ISO</strong></li></ol><p><img src="https://s2.loli.net/2023/08/24/ve1Bm5FL32sSu7E.png" alt="选择：生成可启动ISO"></p><ol start="2"><li>生成 ISO</li></ol><p><img src="https://s2.loli.net/2023/08/24/Hca89Ak4GJFfPxp.png" alt="立即生成 ISO"></p><ol start="3"><li>插入U盘并打开Rufus后，在<code>设备</code>栏目中选择刚插入的U盘，并在<code>引导类型选择</code>边点击<code>选择</code>，找到上一步导出的ISO文件</li></ol><p><img src="https://s2.loli.net/2023/08/24/tPOzjgLJeo1u5KG.png" alt="选择生成的ISO"></p><p>在Rufus中选择U盘后，再选择WinPE的ISO即可点击<code>开始</code></p><ol start="4"><li>点击<code>开始</code>，耐心等待就可以~</li></ol><h5 id="2-检查EFI（ESP）分区"><a href="#2-检查EFI（ESP）分区" class="headerlink" title="2.检查EFI（ESP）分区"></a>2.检查EFI（ESP）分区</h5><p>进入PE系统后，打开DiskGenius工具，找到装有系统的磁盘（在我这里就是C盘）</p><p>寻找有没有“ESP”分区</p><p><img src="https://s2.loli.net/2023/08/24/tdSDNE6zuIbr2fO.png" alt="image.png"></p><p>如果发现没有找到ESP分区，则证明确实缺失ESP分区。这时就需要自己创建一个ESP分区了：</p><p>右键点击磁盘内装有系统的分区，可以看到<em>创建ESP&#x2F;MSR分区</em> 选项</p><p><img src="https://s2.loli.net/2023/08/24/iEGD23oresXfc8H.png" alt="创建 ESP分区"></p><img src="https://s2.loli.net/2023/08/24/Qwuofm1Oekgn5AM.png" title="" alt="image.png" width="653"><p>来到建立ESP、MSR分区页面，</p><ol><li><p>选择建立ESP分区</p></li><li><p>留够一定的空间，一般200Mb~300Mb足够</p></li></ol><p><img src="https://s2.loli.net/2023/08/24/lBhtiHqTfpmc9Lo.png" alt="image.png"></p><p>看到ESP分区建立完成，可以退出DiskGenius了。</p><h5 id="3-修复EFI"><a href="#3-修复EFI" class="headerlink" title="3.修复EFI"></a>3.修复EFI</h5><p>确认ESP分区建立好后就可以开始恢复EFI文件了</p><ol><li><p>使用DISKPART找到ESP分区</p><p>打开CMD，启动Diskpart：</p></li></ol><p><img src="https://s2.loli.net/2023/08/24/emr6NR27KYZLhaB.png" alt="启动Diskpart"></p><p><img src="https://s2.loli.net/2023/08/24/k8M3oKqwQmzHGF2.png" alt="启动Diskpart成功"></p><p>启动！</p><p>以下是我们会用到的一些指令：</p><table><thead><tr><th>list disk</th><th>列出所有挂载磁盘</th></tr></thead><tbody><tr><td><strong>list par</strong></td><td><strong>列出当前磁盘所有分区</strong></td></tr><tr><td><strong>sel disk <em>n</em></strong></td><td><strong>选择磁盘，<em>n</em>为磁盘编号</strong></td></tr><tr><td><strong>sel par <em>n</em></strong></td><td><strong>选择分区，<em>n</em>同理</strong></td></tr><tr><td><strong>assign letter&#x3D;a</strong></td><td><strong>给所选分区分配盘符，<em>a</em> 为盘符</strong></td></tr></tbody></table><p>列出磁盘：</p><p><code>list disk</code></p><p>并选择带有刚刚创建的磁盘的磁盘，我的是磁盘0：</p><p><code>sel disk 0</code></p><p>磁盘号不同可自行更改：</p><p><code>sel disk n</code></p><p><img src="https://s2.loli.net/2023/08/24/2fU5w7CuycdOnhH.png" alt="image.png"></p><p><img src="https://s2.loli.net/2023/08/24/RbGD3h4qld1oSwi.png" alt="image.png"></p><p>找ESP分区，之前创建了300MB的，这里在分区3：</p><p><code>list par</code></p><p><img src="https://s2.loli.net/2023/08/24/IeYW9ya8rCwlRzS.png" alt="image.png"></p><p>选择ESP分区：</p><p><code>sel par 3</code></p><p>分配一个盘符，方便接下来操作，我使用o：</p><p><code>assign letter=o</code></p><p><img src="https://s2.loli.net/2023/08/24/Y2xLvEwfDKW6Zja.png" alt="image.png"></p><p>现在就可以退出DiskPart了:</p><p><code>exit</code></p><ol start="2"><li><p>使用bcdboot修复EFI文件</p><p><img src="https://s2.loli.net/2023/08/24/AueBJ13gMPk5TFS.png" alt="20190426132015674.png"></p></li></ol><p><code>bcdboot c:\windows /s o: /f eufi /l zh-cn</code></p><p><img src="https://s2.loli.net/2023/08/24/58pcymfPKMt34JZ.jpg" alt="bcdboot.jpg"></p><h4 id="Then"><a href="#Then" class="headerlink" title="Then"></a>Then</h4><p>看到“已成功创建启动文件”就说明EFI已经修复完成了！好耶！</p><p>自信满满重启系统，擦电，楷鸡一步点亮！</p><p>参考文献：</p><ul><li><a href="https://blog.csdn.net/A_Sen_A/article/details/89545311">win10 UEFI引导恢复-万能森帝</a></li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>Help</category>
+      
+      <category>System</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>System</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Steam最新版本解决-vgui无法返回旧版UI问题</title>
+    <link href="/SteamUIProblem/"/>
+    <url>/SteamUIProblem/</url>
+    
+    <content type="html"><![CDATA[<p>最新版本Steam已经不再支持-vgui回退旧版UI，这里是最新方法</p><span id="more"></span><h3 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h3><p>G胖上一次重大更新8.13.34.93算是把Client进行了一波大改，界面很好，很牛逼（不过与我无关）。相信在此之前很多很多朋友在用Steam的皮肤功能（这可是一大精髓啊），不仅如此，旧版UI更简洁，占用更少；相比新版动辄2G的内存占用我可吃不消。</p><p>蛋蛋但逝！近期，G胖又开始搞了一波更新，这下可好，直接禁用vgui了是吧。</p><p>经过一番寻找，我在网上找到了一些教程。取其精华去其糟粕后加入我的想法，使得回退版本100%成功。</p><p>此方法保留了旧版的UI，并接入了新版的功能，算是两映俱全了。</p><h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p><img src="https://s1.ax1x.com/2023/08/19/pP3rYcD.png" alt="2023年8月1日Steam客户端更新"></p><p>2023年8月1日Steam客户端更新后，原本通用的<code>-vgui</code>已经不再适用，Steam Client会忽视这个参数并强制以默认UI打开Client。</p><h3 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h3><h4 id="大致思路"><a href="#大致思路" class="headerlink" title="大致思路"></a>大致思路</h4><ol><li><p>覆盖安装旧版Steam UI</p></li><li><p>清除缓存</p></li><li><p>禁用自动更新</p></li></ol><h4 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h4><ul><li><p>拿好<a href="https://www.123pan.com/s/qnx9-ZX1NA.html">Steam旧版UI</a> 提取码:2233</p></li><li><p>完全退出你的Steam（可以通过任务管理器查看进程以防止自动更新程序运行）</p></li></ul><p><img src="https://s1.ax1x.com/2023/08/19/pP3ry38.png" alt="在任务栏完全退出"></p><ul><li>打开Steam安装根目录，解包下载的文件，全部拖至根目录（覆盖安装）</li></ul><p><img src="https://s1.ax1x.com/2023/08/19/pP3rcjg.png" alt="打开Steam安装目录"></p><ul><li><p>清空<code>appcache,package</code>文件夹（清除缓存）</p></li><li><p>右键创建一个记事本文件，名称为 <code>Steam.cfg</code> （大小写不敏感）</p></li></ul><p><img src="https://s1.ax1x.com/2023/08/19/pP3rRBj.png" alt="创建Steam.cfg"></p><ul><li>使用记事本打开，输入以下内容：</li></ul><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs txt">BootStrapperInhibitAll=Enable<br>BootStrapperForceSelfUpdate=False<br></code></pre></td></tr></table></figure><ul><li><p>保存（禁用强制更新）</p></li><li><p>打开你的桌面上的Steam快捷方式图标，右键-属性</p></li></ul><p><img src="https://s1.ax1x.com/2023/08/19/pP3rWHs.png" alt="Steam"></p><ul><li>在<code>快捷方式</code>选项卡中找到<code>目标</code>，并在后方加上以下参数（禁用更新&#x2F;切换使用旧版UI）</li></ul><figure class="highlight txt"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs txt">-vgui -noverifyfiles and -nobootstrapupdate<br></code></pre></td></tr></table></figure><p><img src="https://s1.ax1x.com/2023/08/19/pP3r4Nq.png" alt="属性-快捷方式-添加参数"></p><ul><li><p>记得在 “ 和 - 之间加一个空格隔开，-确定。</p></li><li><p>Steam++启动的话同理，在设置-Steam设置-启动参数这里添加，不需要加最前方的空格</p></li></ul><p><img src="https://s1.ax1x.com/2023/08/19/pP3roCV.png" alt="Steam++使用参数"></p><h3 id="Then"><a href="#Then" class="headerlink" title="Then"></a>Then</h3><p>至此，你的Steam已完成旧版回滚。请使用快捷方式或Steam++打开Steam，避免直接打开程序本体即可。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Apps</category>
+      
+      <category>Steam</category>
+      
+      <category>Help</category>
+      
+      <category>Steam</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Steam</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Apple越狱-注意事项</title>
+    <link href="/Jailbreak-Attention/"/>
+    <url>/Jailbreak-Attention/</url>
+    
+    <content type="html"><![CDATA[<p>在这里，我会详细介绍Chimera的越狱方法，以及Sileo常见的问题解决方式</p><span id="more"></span><h3 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h3><p>苹果的极客用户不在少数，多多少少都会接触越狱，干一些自己喜欢的插件，打造心目中理想的IPhone。不太清楚目前苹果用户主要用哪个版本的iOS，不过主流的越狱软件就那么几个：unc0ver, Chimera, Checkra1n等。由于苹果回退版本的限制，很多手机已经没有iOS11及以下的版本了，我所使用的是iPhone6，最新版本12.5.7。</p><p>因为这个版本苹果修复了很多固件漏洞，导致unc0ver直接”unspported”没法Jailbreak。再加上Checkra1n还得用U盘启动盘，这样一来最优解就是Chimera了。</p><p>今天我只说说12.5.7及其他i12的设备使用Chimera越狱办法，还有一些Sileo的注意点，其他版本的unc0ver和Cydia使用就先不谈了，毕竟网上一搜一大堆。那么，进入正题</p><h4 id="Chimera"><a href="#Chimera" class="headerlink" title="Chimera"></a>Chimera</h4><p>这是一个由cllostar团队开发的越狱工具，面向对象主要为iOS12用户。比unc0ver好在它支持了12.5.7，很遗憾因为内部问题并没有向上支持iOS13。</p><h3 id="越狱"><a href="#越狱" class="headerlink" title="越狱"></a>越狱</h3><h4 id="安装Chimera"><a href="#安装Chimera" class="headerlink" title="安装Chimera"></a>安装Chimera</h4><p>一般苹果手机的越狱在国内是首选爱思助手的，操作简单管理方便。但是截止到目前，爱思助手并没有收录最新版的chimera，也就是说我们要手动安装Chimera。</p><p>安装过程并不麻烦，照着做即可。</p><ol><li><p>打开<a href="https://chimera.coolstar.org/">Chimera官网</a>  ，选择对应的版本下载ipa安装包。</p><p><img src="https://s1.ax1x.com/2023/07/13/pChdwUx.png" alt="Snipaste_2023-07-13_09-51-38.png"></p></li><li><p>此时的ipa不能直接安装，我们需要在爱思助手进行签名。</p></li><li><p>将手机连接到电脑，打开爱思助手-工具箱-IPA签名，将刚才的ipa文件拖进去，下方选择“使用Apple ID签名’，右侧添加Apple ID，输入好你的ID和密码后选择设备标识(默认就是你连接到电脑的手机)，可以选择保存密码，</p><p><img src="https://s1.ax1x.com/2023/07/13/pChddV1.png" alt="Snipaste_2023-07-13_09-53-20.png"></p><p>确定。勾选上方安装包，选中下方的ID，点击开始签名即可。(正常来说后续需要验证，一般不会出现什么问题，若出现错误删掉ID重新添加一遍)点击上方”打开已签名IPA位置“，找到并安装即可。</p></li></ol><p>至此，Chimera已经成功安装，进行下一步吧~~</p><h3 id="使用Chimera越狱"><a href="#使用Chimera越狱" class="headerlink" title="使用Chimera越狱"></a>使用Chimera越狱</h3><p>安装完成后的Chimera仍然不能直接使用，会提示开发者不受信任。打开设置-通用-设备管理，选择刚才的Apple ID对应的选项，信任即可。</p><h4 id="浅谈越狱"><a href="#浅谈越狱" class="headerlink" title="浅谈越狱"></a>浅谈越狱</h4><p>不管是unc0ver还是Chimera，有一个问题相信所有人都遇到过，就是越狱时error，最关键的时有的时候很顺利，有的时候很**——玄学……</p><p>于是便有了大佬，以玄学对抗玄学，研究出了Jail break百分百成功的方式，测试过确实牛逼。</p><h4 id="使用玄学进行越狱"><a href="#使用玄学进行越狱" class="headerlink" title="使用玄学进行越狱"></a>使用玄学进行越狱</h4><p>(操作来自B站<a href="https://space.bilibili.com/474303543">YuruYuri</a> (BV1o7411T7NW的评论区)</p><ol><li><p>手动重启设备</p></li><li><p>解锁设备，关闭飞行模式，随便打开一个App用一会</p></li><li><p>关闭所有后台应用，并打开飞行模式</p></li><li><p>在主屏幕等待10秒，结束后打开unc0ver</p></li><li><p>在unc0ver界面停留10秒，点击越狱，一次成功。</p></li></ol><p>这个方法同样适用于Chimera。</p><p>第一次点击后在第一步会弹窗提示”reboot required“(差不多的字眼，具体忘记了)，直接确定等待注销。在注销后重复上边除1以外的步骤。越狱完成不会有任何提示，会直接注销。若在重新进入系统时看到了一个Chimera的全屏图标，那么恭喜你，已经成功越狱了！</p><p>此时可以检查一下桌面上是否有Sileo的图标。</p><p>至此，越狱完成~~</p><h3 id="注意！！"><a href="#注意！！" class="headerlink" title="注意！！"></a>注意！！</h3><h4 id="Sileo的注意事项"><a href="#Sileo的注意事项" class="headerlink" title="Sileo的注意事项"></a>Sileo的注意事项</h4><h5 id="dpkg中断"><a href="#dpkg中断" class="headerlink" title="dpkg中断"></a>dpkg中断</h5><p>越狱完了后就可以直接加软件源了(记得把你飞行模式关掉，别试了好多发现都连不上)。</p><p><strong>切记！！别上来就啥都装，在所有插件之前，请先把Filza文件管理装好，这个很重要！！！</strong></p><p>亲测一段时间Sileo后有个最大的毛病就是——<u>dpkg不稳定</u>。当你的插件不兼容时会进入到安全模式，此时进入Sileo会有弹窗提示”Sileo中断“，而大部分情况是：这个时候你无法将出问题的插件卸掉，更糟糕的情况(就是我遇到的)则是根本就没法安装&#x2F;卸载任何东西，就等同于——清除越狱时唯一解。</p><p>还好当时下的插件并不多，这要是到中期插件满天飞的再出个终端那可真就没法活了。</p><h6 id="解决方法1"><a href="#解决方法1" class="headerlink" title="解决方法1"></a>解决方法1</h6><p>解决方法还是有的，如果你的Sileo只是单纯的写在不掉，<u>没有Depends缺失error的话</u>：</p><p>dpkg中断提示消失后会有弹窗错误报告，从白色字中找关键字确定有问题的插件。</p><p>打开Filza，使用文本编辑器打开&#x2F;Library&#x2F;dpkg&#x2F;status，找到有问题的插件对应的package，将整个代码块全部删除。</p><p>重启Sileo</p><h6 id="解决方法2"><a href="#解决方法2" class="headerlink" title="解决方法2"></a>解决方法2</h6><p>如果你的Sileo是完全瘫痪型的，<u>装不了也卸不了都提示缺失的话</u>：</p><p>从错误报告中红字找到问题插件对应的路径，将整个插件文件夹删掉(千万要看好别删多了&#x2F;错删)，然后执行<a href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%951">解决方法1</a> ，删除代码块。</p><p>重启Sileo</p><h5 id="Cydia？"><a href="#Cydia？" class="headerlink" title="Cydia？"></a>Cydia？</h5><p>“欸？我那个亲切、熟悉、f**k的Cydia呢？”</p><p>很多人看到自己不熟悉的Sileo后一般都会像我一样先有点失望……吧。</p><p>其实不需要失望，在我体验一段时间过后，我只能说：这比Cydia强，强的很（。</p><p>Sileo是后期出现的一个软件源安装器，它的出现带动了越狱圈的又一波兴起，也证明这个圈子正在发展。</p><p>也是因为出现时间靠后这个原因，Sileo很明显有汲取Cydia的经验，不管是在启动加载速度、安装过程以及对故障的处理中、更重要的稳定性中都表现的比Cydia好。</p><p>Cydia时代，我一个不小心装错一个插件，<strong>重要的是safemode识别不出来</strong>！！结果就是卡在黑苹果界面几个小时不动弹——变成板砖了。</p><p>而且想必各位也知道Cydia那个启动加载速度那个慢，有那个功夫已经下好几个插件了。</p><p>不足：一些插件无法自动下载。</p><p>就拿Tinybanner举例子，除了1代，二代所有源的Tinybanner全部缺失依赖，即使加上所说的依赖源仍然无法顺利安装，而Cydia就没有这样的问题。</p><p>Cydia和Sileo的源大多是通用的，所以基本不用担心缺插件的问题。</p><h3 id="Sileo源推荐"><a href="#Sileo源推荐" class="headerlink" title="Sileo源推荐"></a>Sileo源推荐</h3><p>Sileo的源基本可以和Cydia通用，这些是测试过可以正常检测并安装的源，可供使用，不定期更新</p><blockquote><p>apt.nuosike.cn<br>apt.cydia.love<br>repo.hackyouriphone.org<br>apt.cydiavip.com<br>apt.cydiakk.com<br>apt.fcydia.com</p></blockquote><p>Cydia图吧源没有加，里边基本软件都404，在Sileo里是这样的</p><h3 id="插件推荐"><a href="#插件推荐" class="headerlink" title="插件推荐"></a>插件推荐</h3><blockquote><p><strong>(必装)Filza File</strong></p><p>HomeGesture 「X手势」</p><p>Centaur 个性状态栏</p><p>Shy Page Dots 动态小白点</p><p>QQ隐藏下拉小程序</p><p>Muktipla Dock小部件</p><p>LowPowerBannerTips 低电量横幅样式提示</p><p>Dune 局部黑暗</p></blockquote>]]></content>
+    
+    
+    <categories>
+      
+      <category>Help</category>
+      
+      <category>Jailbreak</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Jailbreak</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>二次元语录</title>
+    <link href="/Animate_quotes/"/>
+    <url>/Animate_quotes/</url>
+    
+    <content type="html"><![CDATA[<span id="more"></span>]]></content>
+    
+    
+    <categories>
+      
+      <category>Animation</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Animation</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>JLPT考试注意事项</title>
+    <link href="/JLPT-Attension/"/>
+    <url>/JLPT-Attension/</url>
+    
+    <content type="html"><![CDATA[<p>第一次参加2023年7月份的日本语能力测试(JLPT)，整个考试流程我也是第一次了解，希望这篇文章对你有帮助</p><span id="more"></span><h3 id="考前"><a href="#考前" class="headerlink" title="考前"></a>考前</h3><h4 id="报名"><a href="#报名" class="headerlink" title="报名"></a>报名</h4><p>JLPT的报名方式都是在网上报名并缴费，通过<a href="https://jlpt.neea.cn/">JLPT教育网</a>注册并缴费。一般报名缴费时间在考试前4个月(今年7月试是这样的)，每年每个考试的时间都不尽相同，如果不确定报名时间最好在上一次考试结束后提一两个月内查看(大概就是成绩出来的时间)，官网都有声明，随时可能更新。</p><h3 id="考中"><a href="#考中" class="headerlink" title="考中"></a>考中</h3><h3 id="考后"><a href="#考后" class="headerlink" title="考后"></a>考后</h3>]]></content>
+    
+    
+    <categories>
+      
+      <category>Help</category>
+      
+      <category>JLPT</category>
+      
+      <category>JPN</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>JLPT</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>CSP中创建19号笔刷</title>
+    <link href="/CSPCreateNo19Brush/"/>
+    <url>/CSPCreateNo19Brush/</url>
+    
+    <content type="html"><![CDATA[<p>CSP中并没有自带的19号笔刷，需要手动创建，方法在这里</p><span id="more"></span>]]></content>
+    
+    
+    <categories>
+      
+      <category>Apps</category>
+      
+      <category>Help</category>
+      
+      <category>CSP</category>
+      
+      <category>CSP</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>CSP</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>手动添加开机启动项</title>
+    <link href="/AddStartup-apps/"/>
+    <url>/AddStartup-apps/</url>
+    
+    <content type="html"><![CDATA[<p>当Windows资源管理器的启动项中没有我们所需要开机启动的软甲，这样添加</p><span id="more"></span><h3 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h3><p>Windows启动项大家都不陌生了</p><p><img src="/img%5Cposts%5CAdd-start-app%5Cimage_12.png" alt="image_12.png"></p><p>有的软件开机启动就如如鱼得水，而有的软件自动启动就是是依托答辩。</p><h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>但是随着软件不断增多，一些日常使用非常频繁的软件就急需添加到开机启动项。问题来了，像aria2这种可以后台运行、实时下载文件的软件，却又没有开机启动项可以设置。</p><p>所以最终就要请出手动添加的方法了：</p><h3 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h3><ul><li><p><code>win+R</code> 启动运行窗口</p></li><li><p>输入 <code>shell:startup</code></p></li></ul><p><img src="/img%5Cposts%5CAdd-start-app%5Cimage_13.png" alt="image_13.png"></p><p>不出意外的话会进入到这个路径</p><p><img src="/img%5Cposts%5CAdd-start-app%5Cimage_14.png" alt="image_14.png"></p><p>这里便是用户自动开机启动项了，只需要把软件的快捷方式拖进来，然后你就能在任务管理器的启动界面看到对应的软件了</p><h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><ol><li><p>这个指令打开的文件夹以及你手动添加的开机启动项都只限定你<strong>目前使用的帐户</strong>，如果你的电脑上有多个账户，那么这个设置对其他账户不起作用</p></li><li><p>如果回车打不开文件夹报错(这种情况真的很少，除非是作死删了什么东西)，就根据目录手动创建，有同样效果。</p></li><li><p>尽量在软件自带设置的开机启动因各种原因失效后使用这个方法，虽然没试过有没有冲突什么的，<del>但是别作死就是了</del>。</p></li></ol><h3 id="Then"><a href="#Then" class="headerlink" title="Then"></a>Then</h3><p>然后嘛，~~去体验香喷喷的自动开机吧~~~~</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Help</category>
+      
+      <category>System</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>System</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Steam 8.13.34.93版本主题皮肤失效[已失效]</title>
+    <link href="/SteamUIProblem-Unabled/"/>
+    <url>/SteamUIProblem-Unabled/</url>
+    
+    <content type="html"><![CDATA[<p>关于STEAM 2023&#x2F;6&#x2F;16日UI界面更新，导致旧版的主题皮肤文件失效的解决办法</p><span id="more"></span><p class="note note-danger">此文章内容已经失效，请移步至最新解决方案: <a href="../SteamUIProblem/">Steam最新版本解决-vgui无法返回旧版UI问题</a></p><h3 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h3><p>2023年6月16日，steam进行了一波更新。G胖这次可算是对着UI进行了一波大改：</p><p><img src="https://s1.ax1x.com/2023/06/21/pCGz4iT.png" alt="main.png"></p><p>说实话改的确实不错，一些动画也进行了优化，总体来说非常不错。</p><p><img src="/img%5Cposts%5Cideas-for-theme-in-new-version%5Cimage_11.png" alt="image_11.png"></p><h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>但是，经过一番寻找然后就会发现：我skin呢？</p><p><del>steam skins可是客户端的一大精髓</del>，怎么能随随便便就没？</p><p>So，这个新界面我就委婉拒绝了<del>，还是我旧UI的老婆香</del></p><h3 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h3><ul><li><p>打开你的Steam快捷方式</p></li><li><p>在“目标”里，最后加入后面一段代码：<code> -vgui</code></p></li></ul><p>效果如图所示</p><p><img src="https://s1.ax1x.com/2023/06/21/pCJpdC8.png"></p><h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><p>“与- 间一定要有一个空格，否则无效</p><h3 id="Then"><a href="#Then" class="headerlink" title="Then"></a>Then</h3><p><img src="https://s1.ax1x.com/2023/06/22/pCJcjMj.png"></p><p>然后老婆就回来了~~~~</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>Apps</category>
+      
+      <category>Steam</category>
+      
+      <category>Help</category>
+      
+      <category>Steam</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Steam</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  
+  
+  
+  <entry>
+    <title>about</title>
+    <link href="/"/>
+    <url>/</url>
+    
+    <content type="html"><![CDATA[<h3 id="你好"><a href="#你好" class="headerlink" title="你好"></a>你好</h3><p>我是中川千夏，你也可以叫我CHinaTsu，别问我为什么有大小写。<del>因为个性</del></p><p>……</p><p><del>在这种自我介绍中总是不知如何开口</del></p><h3 id="关于我"><a href="#关于我" class="headerlink" title="关于我"></a>关于我</h3><p>我仅是一名高中生，在几年前开始接触计算机，前年开始学习Python(<del>然而学了托答辩</del>)。日常喜欢打打代码搞搞3D(Maya，Blender，Pr，VS)。关于计算机的一切我都有涉及，于是才会有了这个Blog。在大部分领域中，我基本是靠自学，实践-失败-测试-成功，方才有了搭建博客等等这样的不值一提的能力。</p><h4 id="搭建Blog"><a href="#搭建Blog" class="headerlink" title="搭建Blog"></a>搭建Blog</h4><h5 id="初试"><a href="#初试" class="headerlink" title="初试"></a>初试</h5><p>在2022年夏天我在搜寻有关建设论坛的教程时偶然找到了Hexo，于是自此开始捣鼓。因为当初英文基础和代码基础不太好，再加上第一个主题使用的<a href="https://xaoxuu.com/wiki/stellar/">stellar</a>并不成熟，一些少见的、没有完美解决方案的bug让我一次次止步不前，到后来我换了butterfly，经过几个月建设后只是进行了美化，而并没有实际成果，于是这项工程被暂时(彻底)搁置。</p><h5 id="重返"><a href="#重返" class="headerlink" title="重返"></a>重返</h5><p>2023年6月，看到浏览器收藏夹中的Hexo后，下意识的点了进去，不知不觉跟着Docs做了起来。基于第一次尝试的经验，这次并没有什么坎坷，安装很顺利。而正是安装的过程我意识到，我是时候该做点什么了。</p><p>回顾了一下我从接触计算机以来，从作为一个领域萌新(包括但不限于编程、网络、游戏等各个方面)，逐渐成长为中阶选手，我很清楚作为一个萌新当遇到一个没有人可以解决的的难题却又不得不用这套方案时的无奈和无助，我很清楚在询问他人时因问题太罕见或代码基础不好而被冷漠或排挤的感受，所以我希望寻找一种方式将我踏过的路、走过的水指明给他人。</p><h5 id="理由"><a href="#理由" class="headerlink" title="理由"></a>理由</h5><p>这便是我创建这个Blog的理由：为了更好、更精准的帮助他人，给那些找不到解决方案、停滞不前的萌新们一丁点动力，而不至于因为一个bug放弃一项工程。</p><h5 id="尝试"><a href="#尝试" class="headerlink" title="尝试"></a>尝试</h5><p>首先我在B站发布了<a href="https://www.bilibili.com/video/BV1NN4y1g7s8/">关于CSP19号笔刷的问题</a>几千的播放看似颇有成果，却并不合意，因为——这种方式的工作量太大了。仅仅是1分钟的视频，封面、录制、配音、剪辑加起来就接近一个半点，虽说解决方法很明了、也很方便观看，但效率很慢，就导致制作动力很低很低(到现在为止都还是那一个视频)。而且一些比较小的问题也不值得去发一个视频，既没人看到还浪费时间，何必呢。于是，Blog成为了比较好的解决方法——编辑一篇文章的时间可以说很短了，除非像这样自我介绍的长篇大论，一般只需要5-10分钟即可搞定，再加上配图、图床，不到20分钟就能出稿一篇精美、详略得当、易懂、有效的文章。</p><h4 id="文章"><a href="#文章" class="headerlink" title="文章"></a>文章</h4><h5 id="一般"><a href="#一般" class="headerlink" title="一般"></a>一般</h5><p>不到20分钟来说只是对于少部分文章，因为我的Blog更擅长应对一些极端、罕见的疑难杂症，所以为了使教程更详细、易懂，需要普及、解释许多专业术语并配上图片和相关链接，加上适当的排版，大部分的文章就来到了1h左右。</p><h4 id="AI？"><a href="#AI？" class="headerlink" title="AI？"></a>AI？</h4><p>在这里声明：</p><div class="note note-warning">            <p><strong>Blog中所有以<em>Nakagawa-CHinaTsu</em>为作者，并以<em>BY-NC-SA</em>为许可协议的文章，<u>除页图和头图外</u>，均不会使用任何由AI进行生成的内容。</strong></p>          </div><p>同样，也请避免类似”AI创作这样的话题”，相关想法我会出一篇文章分享我个人的见解。</p>]]></content>
+    
+  </entry>
+  
+  
+  
+</search>
